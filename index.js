@@ -5,6 +5,7 @@ const { inject, uninject } = require('powercord/injector');
 const rippleElements = [
 	'message-2qnXI6',
 	'container-2Pjhx-',
+	'containerDefault--pIXnN',
 	'labelContainer-1BLJti',
 	'item-PXvHYJ',
 	'channel-2QD9_O',
@@ -23,19 +24,18 @@ module.exports = class PixelCordHelper extends Plugin {
 	}
 
 	async startPlugin() {
-		document.body.addEventListener("click", this.pixelCordEnhancer);
+		document.body.addEventListener("mousemove", this.pixelCordEnhancer);
 	}
 
 	pluginWillUnload() {
-		document.body.removeEventListener("click", this.pixelCordEnhancer);
-		uninject('PixelCordHelper');
+		document.body.removeEventListener("mousemove", this.pixelCordEnhancer);
+		//uninject('PixelCordHelper');
 	}
 
 	pixelCordEnhancer(e) {
 		// Get the element
 		e = e || window.event;
 		let target = e.target || e.srcElement;
-
 		let foundTarget = false;
 
 		for (let j = 0; j < rippleElements.length; j++)
