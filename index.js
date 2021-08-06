@@ -20,54 +20,57 @@ const rippleElements = [
 module.exports = class PixelCordHelper extends Plugin {
 	constructor() {
 		super();
-		this.pixelCordEnhancer = this.pixelCordEnhancer.bind(this)
+		this.mouseEventBind = this.mouseEventBind.bind(this)
 	}
 
 	async startPlugin() {
-		document.body.addEventListener("mousemove", this.pixelCordEnhancer);
+		document.body.addEventListener("mousemove", this.mouseEventBind("mouse"));
+        document.body.addEventListener("mousedown", this.mouseEventBind("click"));
 	}
 
 	pluginWillUnload() {
-		document.body.removeEventListener("mousemove", this.pixelCordEnhancer);
-		//uninject('PixelCordHelper');
+		document.body.removeEventListener("mousemove", this.mouseEventBind("mouse"));
+        document.body.removeEventListener("mousedown", this.mouseEventBind("click"));
 	}
 
-	pixelCordEnhancer(e) {
-		// Get the element
-		e = e || window.event;
-		let target = e.target || e.srcElement;
-		let foundTarget = false;
+	mouseEventBind(param) {
+		return function (e) {
+			// Get the element
+			e = e || window.event;
+			let target = e.target || e.srcElement;
+			let foundTarget = false;
 
-		for (let j = 0; j < rippleElements.length; j++)
-		{
-			if (target.classList.contains(rippleElements[j])) {
-				foundTarget = true;
-				break;
-			}
-		}
-
-		// Check up to 5 parents up if the element has an after
-		for (let i = 0; i < 4 && !foundTarget; i++) {
-			if (target.parentElement != null) {
-				target = target.parentElement;
-				for (let j = 0; j < rippleElements.length && !foundTarget; j++) {
-					if (target.classList.contains(rippleElements[j]))
-						foundTarget = true;
+			for (let j = 0; j < rippleElements.length; j++)
+			{
+				if (target.classList.contains(rippleElements[j])) {
+					foundTarget = true;
+					break;
 				}
 			}
-		}
 
-		if (foundTarget) {
-			// Get the mouse position relative to the element
-			const rect = target.getBoundingClientRect();
-			let x = e.clientX - rect.left; //x position within the element.
-			let y = e.clientY - rect.top;  //y position within the element.
-			x -= rect.width / 2;
-			y -= rect.height / 2;
+			// Check up to 5 parents up if the element has an after
+			for (let i = 0; i < 4 && !foundTarget; i++) {
+				if (target.parentElement != null) {
+					target = target.parentElement;
+					for (let j = 0; j < rippleElements.length && !foundTarget; j++) {
+						if (target.classList.contains(rippleElements[j]))
+							foundTarget = true;
+					}
+				}
+			}
 
-			// Tell the CSS
-			target.style.setProperty("--mouseX", x + "px");
-			target.style.setProperty("--mouseY", y + "px");
+			if (foundTarget) {
+				// Get the mouse position relative to the element
+				const rect = target.getBoundingClientRect();
+				let x = e.clientX - rect.left; //x position within the element.
+				let y = e.clientY - rect.top;  //y position within the element.
+				x -= rect.width / 2;
+				y -= rect.height / 2;
+
+				// Tell the CSS
+				target.style.setProperty("--" + param + "X", x + "px");
+				target.style.setProperty("--" + param + "Y", y + "px");
+			}
 		}
 	}
 };
