@@ -1,6 +1,6 @@
 # Hyblocker's Theme Helper
 
-A simple plugin which exposes the mouse position to CSS
+A simple plugin which exposes a few things to CSS so that themes can do cool stuff they couldn't do before.
 That's literally it; its nothing special because it doesn't have to be :D
 
 ## Installation
@@ -17,12 +17,20 @@ git clone https://github.com/hyblocker/discord-theme-helper.git
 
 Download the `HyblockerThemeHelper.plugin.js` file and drop it into your plugins folder.
 
+## Feature parity
+| Feature | Powercord | BetterDiscord |
+| ------- | --------- | ------------- |
+| mouse position | ✔ | ✔ |
+| mouse click position | ✔ | ✔ |
+| user banner (Friends list) | ✔ | ❌ |
+| user accent color (Friends list) | ✔ | ❌ |
+
 ## Usage (for theme developers)
 
 Add the following to your CSS (for default values)
 
 ```css
-::root {
+:root {
     /* live mouse position, useful for effects like reveal from microsoft's fluent design */
     --mouseX: 0px;
     --mouseY: 0px;
@@ -34,11 +42,17 @@ Add the following to your CSS (for default values)
 
 Then use the `--mouseX` and `--mouseY` CSS variables in your theme to access the mouse position.
 
-Mouse position is relative to the element
+Mouse position is relative to the element.
+
+### More documentation
+
+For available CSS variables read [Variables.md](https://github.com/hyblocker/discord-theme-helper/blob/main/Variables.md)
+For new attributes which get added to the DOM read [Attributes.md](https://github.com/hyblocker/discord-theme-helper/blob/main/Attributes.md)
 
 # Themes using this plugin
 
-[Pixelcord](https://github.com/hyblocker/pixelcord) :: Purely CSS based ripple
+[Pixelcord by Hyblocker](https://github.com/hyblocker/pixelcord) :: Purely CSS based ripple
+[Friends Grid by CorellanStoma](https://github.com/CorellanStoma/Friends-Grid) :: User banners and profile colors
 
 
 
