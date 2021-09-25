@@ -26,20 +26,21 @@ module.exports = class HyblockerThemeHelper extends Plugin {
 
 			// cum on your cord :)
 			if (!window.cumcord) {
-				const response = await fetch("https://cors.bridged.cc/https://hg.sr.ht/~creatable/Cumcord/raw/dist/build.js?rev=stable");
+				const response = await fetch("https://cdn.jsdelivr.net/gh/Cumcord/Cumcord@stable/dist/build.js");
 				const text = await response.text();
-				eval(text);
+				eval(`${text}
+//# sourceURL=https://cdn.jsdelivr.net/gh/Cumcord/Cumcord@stable/dist/build.js`);
 				if (window.cumcord) {
 					hasCummed = true;
+
+					// Import Theme Helper!!!!!!!!
+					window.cumcord.plugins.importPlugin("https://hyblocker-discord.github.io/cumcord-plugins/ThemeHelper/dist/");
 				} else {
 					console.error("[CRITICAL] Failed to inject cumcord!");
 					await this.fuckV3();
 					return;
 				}
 			}
-
-			// Import Theme Helper!!!!!!!!
-			window.cumcord.plugins.importPlugin("https://hyblocker-discord.github.io/cumcord-plugins/ThemeHelper/dist/");
 
 			console.log(`Loaded ${this.manifest.name}`);
 		} catch (ex) {
