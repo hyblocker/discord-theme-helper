@@ -18,7 +18,7 @@ module.exports = class HyblockerThemeHelper extends Plugin {
 
 		if (typeof eval == undefined || typeof eval == null) {
 			console.error("[CRITICAL] eval is undefined! Cumcord cannot work without eval!");
-			this.fuckV3();
+			await this.fuckV3();
 			return;
 		}
 
@@ -33,7 +33,7 @@ module.exports = class HyblockerThemeHelper extends Plugin {
 					hasCummed = true;
 				} else {
 					console.error("[CRITICAL] Failed to inject cumcord!");
-					this.fuckV3();
+					await this.fuckV3();
 					return;
 				}
 			}
@@ -44,7 +44,7 @@ module.exports = class HyblockerThemeHelper extends Plugin {
 			console.log(`Loaded ${this.manifest.name}`);
 		} catch (ex) {
 			console.error(ex);
-			this.fuckV3();
+			await this.fuckV3();
 		}
 	}
 
@@ -59,7 +59,7 @@ module.exports = class HyblockerThemeHelper extends Plugin {
 		}
 	}
 
-	fuckV3() {
+	async fuckV3() {
 			failedToInject = true;
 
 			// fuk u v3!!!!!
