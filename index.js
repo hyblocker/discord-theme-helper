@@ -1,225 +1,121 @@
 const { Plugin } = require('powercord/entities');
 const { inject, uninject } = require('powercord/injector');
-const { findInReactTree } = require('powercord/util');
 const { React, getModule } = require('powercord/webpack');
 
-// list of elements which we whitelist giving the mouse position to
-const rippleElements = [
-	'message-2qnXI6',
-	'container-2Pjhx-',
-	'containerDefault--pIXnN',
-	'labelContainer-1BLJti',
-	'item-PXvHYJ',
-	'channel-2QD9_O',
-	'content-1x5b-n',
-	'listRow-hutiT_',
-	'resultFocused-3aIoYe',
-	'item-2J2GlB',
-	'actionButton-VzECiy',
-	'autocompleteRowVertical-q1K4ky',
-];
+const { Button } = require('powercord/components');
 
-let _this = {};
+const { FormTitle } = getModule(["FormTitle"], false);
+const flexClasses = getModule(["flex", "directionRow"], false);
+const marginClasses = getModule(["marginBottom20"], false);
+
+// Track if cumcord was injected before
+let hasCummed = false;
+let failedToInject = false;
 
 module.exports = class HyblockerThemeHelper extends Plugin {
-	constructor(...args) {
-		super(...args);
-		this.mouseEventBind = this.mouseEventBind.bind(this)
-		_this = this;
-		_this.userCache = {};
-	}
-	
-	async startPlugin() {
-		
-		document.body.addEventListener("mousemove", this.mouseEventBind("mouse"));
-        document.body.addEventListener("mousedown", this.mouseEventBind("click"));
 
-		const friendRow = await getModule(m => m.displayName === 'PeopleListItem', false).prototype;
-		_this.getPrimaryColorForAvatar = await getModule(["getPrimaryColorForAvatar"]);
-		
-		// Inject CSS into the friends row, exposing banners and accent colors
-		inject(
-			"theme-helper-friendRowPatch",
-			friendRow,
-			"render",
-			this.friendRowPatch
-		);
+	async startPlugin() {
+
+		if (typeof eval == undefined || typeof eval == null) {
+			console.error("[CRITICAL] eval is undefined! Cumcord cannot work without eval!");
+			this.fuckV3();
+			return;
+		}
+
+		try {
+
+			// cum on your cord :)
+			if (!window.cumcord) {
+				const response = await fetch("https://cors.bridged.cc/https://hg.sr.ht/~creatable/Cumcord/raw/dist/build.js?rev=stable");
+				const text = await response.text();
+				eval(text);
+				if (window.cumcord) {
+					hasCummed = true;
+				} else {
+					console.error("[CRITICAL] Failed to inject cumcord!");
+					this.fuckV3();
+					return;
+				}
+			}
+
+			// Import Theme Helper!!!!!!!!
+			window.cumcord.plugins.importPlugin("https://hyblocker-discord.github.io/cumcord-plugins/ThemeHelper/dist/");
+
+			console.log(`Loaded ${this.manifest.name}`);
+		} catch (ex) {
+			console.error(ex);
+			this.fuckV3();
+		}
 	}
 
 	pluginWillUnload() {
-		
-		document.body.removeEventListener("mousemove", this.mouseEventBind("mouse"));
-		document.body.removeEventListener("mousedown", this.mouseEventBind("click"));
-		
-		powercord.api.settings.unregisterSettings(this.entityID);
-		
-		uninject("theme-helper-friendRowPatch");
-	}
-
-	mouseEventBind(param) {
-		return function (e) {
-			// Get the element
-			e = e || window.event;
-			let target = e.target || e.srcElement;
-			let foundTarget = false;
-
-			for (let j = 0; j < rippleElements.length; j++)
-			{
-				if (target.classList.contains(rippleElements[j])) {
-					foundTarget = true;
-					break;
-				}
-			}
-
-			// Check up to 5 parents up if the element has an after
-			for (let i = 0; i < 4 && !foundTarget; i++) {
-				if (target.parentElement != null) {
-					target = target.parentElement;
-					for (let j = 0; j < rippleElements.length && !foundTarget; j++) {
-						if (target.classList.contains(rippleElements[j]))
-							foundTarget = true;
-					}
-				}
-			}
-
-			if (foundTarget) {
-				// Get the mouse position relative to the element
-				const rect = target.getBoundingClientRect();
-				let x = e.clientX - rect.left; //x position within the element.
-				let y = e.clientY - rect.top;  //y position within the element.
-				x -= rect.width / 2;
-				y -= rect.height / 2;
-
-				// Tell the CSS
-				target.style.setProperty("--" + param + "X", x + "px");
-				target.style.setProperty("--" + param + "Y", y + "px");
-			}
-		}
-	}
-
-	friendRowPatch(_, res) {
-
-		const items = res.props.children();
-		const userObj = findInReactTree(items, e=> e && e.user)?.user;
-		const userData = _this.fetchUser(userObj.id);
-
-		let accentColor = null;
-		if (userObj.accentColor)  {
-			accentColor = userObj.accentColor;
-			_this.cacheUser(userObj);
-		} else if (userData.accentColor) {
-			// fallback to accent if possible
-			accentColor = userData.accentColor;
-		}
-		else {
-			// fallback to autogen
-			_this.getPrimaryColorForAvatar.getPrimaryColorForAvatar(userObj.getAvatarURL())
-				.then(args => _this.cacheUser(userObj, { accentColorGenerated: args }));
-			
-			accentColor = userData.autoAccent;
-		}
-		
-		accentColor = _this._numberToRgba(accentColor);
-		
-		// Add the attributes
-		const modified = React.cloneElement(items.props.children, {
-			// return discord props which get lost during injection
-			'role': "listitem",
-			'data-list-item-id': `people-list___${userObj.id}`,
-			'tabindex': -1,
-
-			// inject additional props
-			'data-user-id': userObj.id,
-			'data-banner-url': userData.bannerURL,
-			'data-accent-color': accentColor,
-
-			// style
-			style: {
-				"--user-banner": userData.bannerURL ? `url("${userData.bannerURL}")` : null,
-				"--user-accent-color": accentColor,
-				...items.props.children.props.style
-			}
-		});
-
-		res.props.children = function() { return modified };
-
-		return res;
-	}
-
-	// Stolen from https://github.com/powercord-community/rolecolor-everywhere/blob/master/index.js#L388-L394
-	_numberToRgba (color, alpha = 1) {
-		const { r, g, b } = _this._numberToRgb(color);
-		if (alpha === 1) {
-		  return `rgb(${r}, ${g}, ${b})`;
-		}
-		return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-	}
-
-	_numberToRgb (color) {
-		const r = (color & 0xFF0000) >>> 16;
-		const g = (color & 0xFF00) >>> 8;
-		const b = color & 0xFF;
-		return {
-			r,
-			g,
-			b
-		};
-	}
-
-	_rgbToNumber (rgb) {
-		return (((rgb[0] << 8) + rgb[1]) << 8) + rgb[2];
-	}
-
-	cacheUser(user, props) {
-		let savedUser = null;
-		let shouldSave = false;
-		let intEncodedColor = null;
-
-		// Fill props
-		if (props?.accentColorGenerated) intEncodedColor = _this._rgbToNumber(props.accentColorGenerated);
-
-		// Fetch user, so that we update it (and not overwrite)
-		if (_this.userCache[user.id]) {
-			savedUser = _this.userCache[user.id];
+		if (failedToInject) {
+			uninject(`${this.manifest.name}-cumcordFailsafe`);
 		} else {
-		 	savedUser = _this.settings.get(user.id, {
-		 		bannerURL: null,
-		 		accentColor: null,
-		 		autoAccent: null,
-		 	});
-		}
-
-		// Check for a diff if the user was saved
-		if (!(user.bannerURL == null && user.accentColor == null) && user.bannerURL != savedUser.bannerURL) {
-			savedUser.bannerURL = user.bannerURL;
-			shouldSave = true;
-		}
-		if (user.accentColor && user.accentColor != savedUser.accentColor) {
-			savedUser.accentColor = user.accentColor;
-			shouldSave = true;
-		}
-		if (props?.accentColorGenerated && intEncodedColor != savedUser.autoAccent) {
-			savedUser.autoAccent = intEncodedColor;
-			shouldSave = true;
-		}
-
-		if (shouldSave) {
-			_this.settings.set(user.id, savedUser);
-			_this.userCache[user.id] = savedUser;
-			console.log("[Hyblocker's Theme Helper]", `Cached user "${user.username}#${user.discriminator}"!`);
+			console.log("Unloaded!");
+			if (hasCummed) {
+				cumcord.uninject();
+			}
 		}
 	}
-	
-	fetchUser(userId) {
-		if (_this.userCache[userId]) {
-			return _this.userCache[userId];
-		} else {
-			_this.userCache[userId] = _this.settings.get(userId, {
-				bannerURL: null,
-				accentColor: null,
-				autoAccent: null,
-			});
-			return _this.userCache[userId];
+
+	fuckV3() {
+			failedToInject = true;
+
+			// fuk u v3!!!!!
+			const SettingsPage = this.buildSettingsPage();
+			const Settings = await getModule(m => m.displayName == "SettingsView");
+
+			// Inject fake Cumcord tab :troll:
+			inject(
+				`${this.manifest.name}-cumcordFailsafe`,
+				Settings.prototype,
+				"getPredicateSections",
+				(args, items) => {
+					const position = items.findIndex((item) => { return item.section == "changelog" }) - 1;
+
+					// Check if we're in the user settings menu
+					if (position < 0) return items;
+
+					const pluginSettings = [
+						{ section: "DIVIDER" },
+						{ section: "HEADER", label: "Cumcord" },
+						{ section: "CUMCORD_PLUGINS", label: "Plugins", element: SettingsPage },
+					];
+
+					items.splice(position, 0, ...pluginSettings)
+
+					return items;
+				},
+				false
+			);
+	}
+
+	buildSettingsPage() {
+		return class SettingsPage extends React.PureComponent {
+			constructor(props) {
+				super(props);
+			}
+
+			render() {
+
+				return (
+					React.createElement('div', { className: "cumcord" },
+						React.createElement(FormTitle, { tag: 'h1', style: {'margin-bottom': '8px', 'margin': 'auto', 'font-weight': '700', 'font-size': '1.4rem'}}, "Fuck powerCord v3"),
+						React.createElement('a', { href: "https://docs.cumcord.com/#/apocalypse/", target:"_blank", ref:"noreferrer noopener", className: "lonk", style: {'margin-bottom': '8px'} }, "powercord fucking broke all my ploogins"),
+						React.createElement(FormTitle, { tag: 'h2', style: {'margin-bottom': '8px', 'font-size': '2rem', 'line-height': '3rem'}}, "All hail the cumcord national anthem"),
+						// React.createElement('video', { src: 'https://cdn.discordapp.com/attachments/824921608560181261/891108729062293524/CCP.mp4', className: 'crazy-cum-party', autoplay: true, }),
+						React.createElement("iframe", {
+							width: "560",
+							height: "315",
+							src: "https://www.youtube-nocookie.com/embed/OjNpRbNdR7E?controls=0",
+							title: "YouTube video player",
+							frameborder: "0",
+							allow: "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture",
+							allowfullscreen: true
+						})
+					));
+			}
 		}
 	}
 };
