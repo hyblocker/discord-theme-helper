@@ -2,121 +2,75 @@ const { Plugin } = require('powercord/entities');
 const { inject, uninject } = require('powercord/injector');
 const { React, getModule } = require('powercord/webpack');
 
-const { Button } = require('powercord/components');
-
-const { FormTitle } = getModule(["FormTitle"], false);
-const flexClasses = getModule(["flex", "directionRow"], false);
-const marginClasses = getModule(["marginBottom20"], false);
-
 // Track if cumcord was injected before
 let hasCummed = false;
-let failedToInject = false;
+let settingsPatch;
 
 module.exports = class HyblockerThemeHelper extends Plugin {
 
-	async startPlugin() {
+    async startPlugin() {
+        // Don't inject if cumcord was already injected
+        if (!window.cumcord) {
+            // cum on your cord :)
+            const response = await fetch("https://cdn.jsdelivr.net/gh/Cumcord/Cumcord@stable/dist/build.js");
+            const text = await response.text();
+            eval(`${text}
+            //# sourceURL=https://cdn.jsdelivr.net/gh/Cumcord/Cumcord@stable/dist/build.js`);
 
-		if (typeof eval == undefined || typeof eval == null) {
-			console.error("[CRITICAL] eval is undefined! Cumcord cannot work without eval!");
-			await this.fuckV3();
-			return;
-		}
+            if (window.cumcord) {
+                hasCummed = true;
 
-		try {
+                // Import Theme Helper
+                window.cumcord.plugins.importPlugin("https://hyblocker-discord.github.io/cumcord-plugins/ThemeHelper/dist/");
 
-			// cum on your cord :)
-			if (!window.cumcord) {
-				const response = await fetch("https://cdn.jsdelivr.net/gh/Cumcord/Cumcord@stable/dist/build.js");
-				const text = await response.text();
-				eval(`${text}
-//# sourceURL=https://cdn.jsdelivr.net/gh/Cumcord/Cumcord@stable/dist/build.js`);
-				if (window.cumcord) {
-					hasCummed = true;
+                // Check if cumcord was ever injected via a wrapper
+                // TODO: Some global settings API rather than PC-Settings API, probably using nests, but idk how nests works so its a TODO
+                if (this.settings.get("CUMCORD_FIRST_TIME", true)) {
 
-					// Import Theme Helper!!!!!!!!
-					window.cumcord.plugins.importPlugin("https://hyblocker-discord.github.io/cumcord-plugins/ThemeHelper/dist/");
-				} else {
-					console.error("[CRITICAL] Failed to inject cumcord!");
-					await this.fuckV3();
-					return;
-				}
-			}
+                    // Show the modal whenever the user enters settings the first time
+                    const Settings = window.cumcord.modules.webpack.findByDisplayName("SettingsView");
+                    settingsPatch = window.cumcord.patcher.after("render", Settings.prototype, (args, res) => {
 
-			console.log(`Loaded ${this.manifest.name}`);
-		} catch (ex) {
-			console.error(ex);
-			await this.fuckV3();
-		}
-	}
+                        // Check if we're in the user settings menu
+                        const sidebarItems = res.props.sidebar.props.children;
+                        const position = sidebarItems.findIndex((item) => { return item.key == "changelog" }) - 1;
+                        if (position < 0) return res;
 
-	pluginWillUnload() {
-		if (failedToInject) {
-			uninject(`${this.manifest.name}-cumcordFailsafe`);
-		} else {
-			console.log("Unloaded!");
-			if (hasCummed) {
-				cumcord.uninject();
-			}
-		}
-	}
+                        if (this.settings.get("CUMCORD_FIRST_TIME", true)) {
 
-	async fuckV3() {
-			failedToInject = true;
+                            // Show the modal informing the user about what cumcord is, so that they aren't alarmed
+                            window.cumcord.ui.modals.showConfirmationModal(
+                                {
+                                    header: "It seems that this is your first time using a Cumcord plugin!",
+                                    content: `Hey, it looks like you've installed a Cumcord plugin via ${this.manifest.name}. Cumcord is a plugin that allows developers to write plugins that work on every mod. As such, you'll notice that you now have a "Cumcord" area in your Discord settings. Don't be alarmed, this page exists to configure the plugins you use that depend on Cumcord.`,
+                                    confirmText: "OK",
+                                    cancelText: null,
+                                    type: "confirm"
+                                }
+                            ).then();
 
-			// fuk u v3!!!!!
-			const SettingsPage = this.buildSettingsPage();
-			const Settings = await getModule(m => m.displayName == "SettingsView");
+                            // Don't show the modal ever again
+                            this.settings.set("CUMCORD_FIRST_TIME", false);
+                        }
 
-			// Inject fake Cumcord tab :troll:
-			inject(
-				`${this.manifest.name}-cumcordFailsafe`,
-				Settings.prototype,
-				"getPredicateSections",
-				(args, items) => {
-					const position = items.findIndex((item) => { return item.section == "changelog" }) - 1;
+                        return res;
+                    });
+                }
 
-					// Check if we're in the user settings menu
-					if (position < 0) return items;
+                console.log(`Loaded ${this.manifest.name}`);
+            }
+        }
+    }
 
-					const pluginSettings = [
-						{ section: "DIVIDER" },
-						{ section: "HEADER", label: "Cumcord" },
-						{ section: "CUMCORD_PLUGINS", label: "Plugins", element: SettingsPage },
-					];
-
-					items.splice(position, 0, ...pluginSettings)
-
-					return items;
-				},
-				false
-			);
-	}
-
-	buildSettingsPage() {
-		return class SettingsPage extends React.PureComponent {
-			constructor(props) {
-				super(props);
-			}
-
-			render() {
-
-				return (
-					React.createElement('div', { className: "cumcord" },
-						React.createElement(FormTitle, { tag: 'h1', style: {'margin-bottom': '8px', 'margin': 'auto', 'font-weight': '700', 'font-size': '1.4rem'}}, "Fuck powerCord v3"),
-						React.createElement('a', { href: "https://docs.cumcord.com/#/apocalypse/", target:"_blank", ref:"noreferrer noopener", className: "lonk", style: {'margin-bottom': '8px'} }, "powercord fucking broke all my ploogins"),
-						React.createElement(FormTitle, { tag: 'h2', style: {'margin-bottom': '8px', 'font-size': '2rem', 'line-height': '3rem'}}, "All hail the cumcord national anthem"),
-						// React.createElement('video', { src: 'https://cdn.discordapp.com/attachments/824921608560181261/891108729062293524/CCP.mp4', className: 'crazy-cum-party', autoplay: true, }),
-						React.createElement("iframe", {
-							width: "560",
-							height: "315",
-							src: "https://www.youtube-nocookie.com/embed/OjNpRbNdR7E?controls=0",
-							title: "YouTube video player",
-							frameborder: "0",
-							allow: "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture",
-							allowfullscreen: true
-						})
-					));
-			}
-		}
-	}
+    pluginWillUnload() {
+        console.log("Unloaded!");
+        if (hasCummed) {
+            // Uninject modal patch
+            if (settingsPatch) {
+                settingsPatch();
+            }
+            // Uninject cumcord itself
+            cumcord.uninject();
+        }
+    }
 };
