@@ -17,6 +17,9 @@ const rippleElements = [
     'item-2J2GlB',
     'actionButton-VzECiy',
     'autocompleteRowVertical-q1K4ky',
+    'button-38aScr',
+    'clickable-1lCRLF',
+    'listRow-1iDGel',
 ];
 
 let _this = {};
