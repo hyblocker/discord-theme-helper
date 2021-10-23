@@ -20,6 +20,7 @@ const rippleElements = [
     'button-38aScr',
     'clickable-1lCRLF',
     'listRow-1iDGel',
+    'role-2irmRk',
 ];
 
 let _this = {};
