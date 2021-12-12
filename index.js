@@ -134,12 +134,12 @@ module.exports = class HyblockerThemeHelper extends Plugin {
 
             // inject additional props
             'data-user-id': userObj.id,
-            'data-banner-url': userData.bannerURL,
+            'data-banner-url': `https://cdn.discordapp.com/banners/${userObj.id}/${userData.banner}`,
             'data-accent-color': accentColor,
 
             // style
             style: {
-                "--user-banner": userData.bannerURL ? `url("${userData.bannerURL}")` : null,
+                "--user-banner": userData.banner ? `url("https://cdn.discordapp.com/banners/${userObj.id}/${userData.banner}?size=600")` : null,
                 "--user-accent-color": accentColor,
                 ...items.props.children.props.style
             }
@@ -187,15 +187,15 @@ module.exports = class HyblockerThemeHelper extends Plugin {
             savedUser = _this.userCache[user.id];
         } else {
             savedUser = _this.settings.get(user.id, {
-                bannerURL: null,
+                banner: null,
                 accentColor: null,
                 autoAccent: null,
             });
         }
 
         // Check for a diff if the user was saved
-        if (!(user.bannerURL == null && user.accentColor == null) && user.bannerURL != savedUser.bannerURL) {
-            savedUser.bannerURL = user.bannerURL;
+        if (!(user.banner == null && user.accentColor == null) && user.banner != savedUser.banner) {
+            savedUser.banner = user.banner;
             shouldSave = true;
         }
         if (user.accentColor && user.accentColor != savedUser.accentColor) {
@@ -219,7 +219,7 @@ module.exports = class HyblockerThemeHelper extends Plugin {
             return _this.userCache[userId];
         } else {
             _this.userCache[userId] = _this.settings.get(userId, {
-                bannerURL: null,
+                banner: null,
                 accentColor: null,
                 autoAccent: null,
             });
