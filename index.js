@@ -118,7 +118,7 @@ module.exports = class HyblockerThemeHelper extends Plugin {
         else {
             // fallback to autogen
             _this.ImageUtils.getPaletteForAvatar(userObj.getAvatarURL())
-                .then(args => _this.cacheUser(userObj, { accentColorGenerated: args }));
+                .then(args => _this.cacheUser(userObj, { accentColorGenerated: args[0] }));
             
             accentColor = userData.autoAccent;
         }
