@@ -39,7 +39,7 @@ module.exports = class HyblockerThemeHelper extends Plugin {
         document.body.addEventListener("mousedown", this.mouseEventBind("click"));
 
         const friendRow = await getModule(m => m.displayName === 'PeopleListItem', false).prototype;
-        _this.getPrimaryColorForAvatar = await getModule(["getPrimaryColorForAvatar"]);
+        _this.ImageUtils = await getModule(["getPaletteForAvatar"]);
         
         // Inject CSS into the friends row, exposing banners and accent colors
         inject(
@@ -117,8 +117,8 @@ module.exports = class HyblockerThemeHelper extends Plugin {
         }
         else {
             // fallback to autogen
-            _this.getPrimaryColorForAvatar.getPrimaryColorForAvatar(userObj.getAvatarURL())
-                .then(args => _this.cacheUser(userObj, { accentColorGenerated: args }));
+            _this.ImageUtils.getPaletteForAvatar(userObj.getAvatarURL())
+                .then(args => _this.cacheUser(userObj, { accentColorGenerated: args[0] }));
             
             accentColor = userData.autoAccent;
         }
