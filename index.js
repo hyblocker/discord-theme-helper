@@ -180,7 +180,7 @@ module.exports = class HyblockerThemeHelper extends Plugin {
         let intEncodedColor = null;
 
         // Fill props
-        if (props?.accentColorGenerated) intEncodedColor = _this.accentColorGenerated(props.accentColorGenerated);
+        if (props?.accentColorGenerated) intEncodedColor = _this._rgbToNumber(props.accentColorGenerated);
 
         // Fetch user, so that we update it (and not overwrite)
         if (_this.userCache[user.id]) {
