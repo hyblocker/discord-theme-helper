@@ -39,7 +39,7 @@ module.exports = class HyblockerThemeHelper extends Plugin {
         document.body.addEventListener("mousedown", this.mouseEventBind("click"));
 
         const friendRow = await getModule(m => m.displayName === 'PeopleListItem', false).prototype;
-        _this.getPrimaryColorForAvatar = await getModule(["getPrimaryColorForAvatar"]);
+        _this.ImageUtils = await getModule(["getPaletteForAvatar"]);
         
         // Inject CSS into the friends row, exposing banners and accent colors
         inject(
@@ -117,7 +117,7 @@ module.exports = class HyblockerThemeHelper extends Plugin {
         }
         else {
             // fallback to autogen
-            _this.getPrimaryColorForAvatar.getPrimaryColorForAvatar(userObj.getAvatarURL())
+            _this.ImageUtils.getPaletteForAvatar(userObj.getAvatarURL())
                 .then(args => _this.cacheUser(userObj, { accentColorGenerated: args }));
             
             accentColor = userData.autoAccent;
@@ -180,7 +180,7 @@ module.exports = class HyblockerThemeHelper extends Plugin {
         let intEncodedColor = null;
 
         // Fill props
-        if (props?.accentColorGenerated) intEncodedColor = _this._rgbToNumber(props.accentColorGenerated);
+        if (props?.accentColorGenerated) intEncodedColor = _this.accentColorGenerated(props.accentColorGenerated);
 
         // Fetch user, so that we update it (and not overwrite)
         if (_this.userCache[user.id]) {
